@@ -10,21 +10,22 @@ import java.util.Arrays;
  */
 public class UDPServer {
     private static final int DATA_SIZE = 1024;
-    private static final int PORT = 9876;
 
     private IMessageHandler handler;
+    private int port;
 
     private boolean stopRequested = false;
 
-    public UDPServer(IMessageHandler handler)
+    public UDPServer(IMessageHandler handler, int port)
     {
         this.handler = handler;
+        this.port = port;
     }
 
     public void waitForMessages() throws IOException
     {
         stopRequested = false;
-        DatagramSocket serverSocket = new DatagramSocket(UDPServer.PORT);
+        DatagramSocket serverSocket = new DatagramSocket(port);
         byte[] receivedDataBuffer = new byte[UDPServer.DATA_SIZE];
         while(!stopRequested)
         {
