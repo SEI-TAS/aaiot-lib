@@ -11,6 +11,7 @@ import java.util.Arrays;
  */
 public class UDPClient {
     private static final int DATA_SIZE = 1024;
+    private static final int TIMEOUT = 5 * 1000;
 
     private InetAddress serverIP;
     private int serverPort;
@@ -42,7 +43,11 @@ public class UDPClient {
     {
         byte[] receivedData = new byte[DATA_SIZE];
         DatagramPacket receivedPacket = new DatagramPacket(receivedData, receivedData.length);
+
+        socket.setSoTimeout(TIMEOUT);
         socket.receive(receivedPacket);
+        socket.setSoTimeout(0);
+
         byte[] realData = Arrays.copyOfRange(receivedPacket.getData(), 0, receivedPacket.getLength());
         String data = new String(realData);
         return data;
