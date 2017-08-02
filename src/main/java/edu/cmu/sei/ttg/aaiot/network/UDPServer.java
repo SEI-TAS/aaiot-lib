@@ -27,31 +27,39 @@ public class UDPServer {
     public void waitForMessages() throws IOException
     {
         stopRequested = false;
-        DatagramSocket serverSocket = new DatagramSocket(port);
-        serverSocket.setSoTimeout(TIMEOUT);
-        byte[] receivedDataBuffer = new byte[UDPServer.DATA_SIZE];
-        while(!stopRequested)
+        DatagramSocket serverSocket = null;
+        try
         {
-            DatagramPacket receivedPacket = new DatagramPacket(receivedDataBuffer, receivedDataBuffer.length);
-
-            try
+            serverSocket = new DatagramSocket(port);
+            serverSocket.setSoTimeout(TIMEOUT);
+            byte[] receivedDataBuffer = new byte[UDPServer.DATA_SIZE];
+            while (!stopRequested)
             {
-                serverSocket.receive(receivedPacket);
-            }
-            catch(SocketTimeoutException so)
-            {
-                System.out.println("Socket timed out, stop receiving messages");
-                break;
-            }
+                DatagramPacket receivedPacket = new DatagramPacket(receivedDataBuffer, receivedDataBuffer.length);
 
-            byte[] realData = Arrays.copyOfRange(receivedPacket.getData(), 0, receivedPacket.getLength());
-            String data = new String(realData);
-            System.out.println("Received (length: " + receivedPacket.getLength() + " ): " + data);
+                try
+                {
+                    serverSocket.receive(receivedPacket);
+                } catch (SocketTimeoutException so)
+                {
+                    System.out.println("Socket timed out, stop receiving messages");
+                    throw so;
+                }
 
-            handler.handleMessage(data, receivedPacket.getAddress(), receivedPacket.getPort());
+                byte[] realData = Arrays.copyOfRange(receivedPacket.getData(), 0, receivedPacket.getLength());
+                String data = new String(realData);
+                System.out.println("Received (length: " + receivedPacket.getLength() + " ): " + data);
+
+                handler.handleMessage(data, receivedPacket.getAddress(), receivedPacket.getPort());
+            }
         }
-
-        serverSocket.close();
+        finally
+        {
+            if(serverSocket != null)
+            {
+                serverSocket.close();
+            }
+        }
     }
 
     public void stop()
