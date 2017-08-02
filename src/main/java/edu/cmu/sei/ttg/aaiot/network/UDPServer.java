@@ -40,6 +40,8 @@ public class UDPServer {
             // were the server is listening at.
             handler.handleMessage(data, receivedPacket.getAddress(), receivedPacket.getPort());
         }
+
+        serverSocket.close();
     }
 
     public void stop()
