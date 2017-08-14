@@ -27,15 +27,20 @@ public class FileCredentialStore implements ICredentialStore
 
     private String filePath;
 
-    public FileCredentialStore()
+    public FileCredentialStore() throws IOException, CoseException
     {
         this.filePath = DEFAULT_FILE_PATH;
+        loadFromFile();
     }
 
     public FileCredentialStore(String filePath) throws IOException, CoseException
     {
         this.filePath = filePath;
+        loadFromFile();
+    }
 
+    private void loadFromFile() throws CoseException, IOException
+    {
         FileInputStream fs;
         try {
             fs = new FileInputStream(filePath);
@@ -57,6 +62,7 @@ public class FileCredentialStore implements ICredentialStore
         this.asId = json.getString(ID_KEY);
         this.rawAsPSK = Base64.getDecoder().decode(json.getString(PSK_KEY));
         this.asPSK = createOneKeyFromBytes(this.rawAsPSK);
+        System.out.println("Credentials loaded from file.");
     }
 
     @Override
