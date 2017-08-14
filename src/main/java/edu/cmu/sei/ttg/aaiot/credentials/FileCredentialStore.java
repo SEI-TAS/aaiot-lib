@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Base64;
 
 /**
@@ -19,11 +20,13 @@ public class FileCredentialStore implements ICredentialStore
 {
     private static final String ID_KEY = "AS_ID";
     private static final String PSK_KEY = "AS_PSK";
+    private static final String IP_KEY = "AS_IP";
     private static final String DEFAULT_FILE_PATH = "credentials.json";
 
     private String asId = null;
     private OneKey asPSK = null;
     private byte[] rawAsPSK = null;
+    private InetAddress ipAddress = null;
 
     private String filePath;
 
@@ -62,21 +65,24 @@ public class FileCredentialStore implements ICredentialStore
         this.asId = json.getString(ID_KEY);
         this.rawAsPSK = Base64.getDecoder().decode(json.getString(PSK_KEY));
         this.asPSK = createOneKeyFromBytes(this.rawAsPSK);
+        this.ipAddress = InetAddress.getByName(json.getString(IP_KEY));
         System.out.println("Credentials loaded from file.");
     }
 
     @Override
-    public boolean storeAS(String asId, byte[] psk)
+    public boolean storeAS(String asId, byte[] psk, InetAddress ipAddress)
     {
         try
         {
             this.asId = asId;
             this.rawAsPSK = psk;
             this.asPSK = createOneKeyFromBytes(psk);
+            this.ipAddress = ipAddress;
 
             JSONObject json = new JSONObject();
             json.put(ID_KEY, asId);
             json.put(PSK_KEY, Base64.getEncoder().encodeToString(psk));
+            json.put(IP_KEY, ipAddress.getHostAddress().toString());
 
             FileWriter file = new FileWriter(filePath, false);
             file.write(json.toString());
@@ -117,5 +123,11 @@ public class FileCredentialStore implements ICredentialStore
     public byte[] getRawASPSK()
     {
         return rawAsPSK;
+    }
+
+    @Override
+    public InetAddress getASIP()
+    {
+        return ipAddress;
     }
 }
