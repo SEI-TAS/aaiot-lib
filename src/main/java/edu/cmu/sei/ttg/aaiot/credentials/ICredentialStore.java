@@ -10,4 +10,5 @@ public interface ICredentialStore
     boolean storeAS(String id, byte[] psk);
     String getASid();
     OneKey getASPSK();
+    byte[] getRawASPSK();
 }

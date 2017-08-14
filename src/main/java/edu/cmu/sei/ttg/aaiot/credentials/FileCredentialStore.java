@@ -23,6 +23,7 @@ public class FileCredentialStore implements ICredentialStore
 
     private String asId = null;
     private OneKey asPSK = null;
+    private byte[] rawAsPSK = null;
 
     private String filePath;
 
@@ -54,7 +55,8 @@ public class FileCredentialStore implements ICredentialStore
         JSONObject json = new JSONObject(jsonString);
 
         this.asId = json.getString(ID_KEY);
-        this.asPSK = createOneKeyFromBytes(Base64.getDecoder().decode(json.getString(PSK_KEY)));
+        this.rawAsPSK = Base64.getDecoder().decode(json.getString(PSK_KEY));
+        this.asPSK = createOneKeyFromBytes(this.rawAsPSK);
     }
 
     @Override
@@ -63,6 +65,7 @@ public class FileCredentialStore implements ICredentialStore
         try
         {
             this.asId = asId;
+            this.rawAsPSK = psk;
             this.asPSK = createOneKeyFromBytes(psk);
 
             JSONObject json = new JSONObject();
@@ -102,5 +105,11 @@ public class FileCredentialStore implements ICredentialStore
     public OneKey getASPSK()
     {
         return asPSK;
+    }
+
+    @Override
+    public byte[] getRawASPSK()
+    {
+        return rawAsPSK;
     }
 }
