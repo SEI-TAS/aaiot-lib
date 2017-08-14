@@ -19,10 +19,17 @@ public class FileCredentialStore implements ICredentialStore
 {
     private static final String ID_KEY = "AS_ID";
     private static final String PSK_KEY = "AS_PSK";
+    private static final String DEFAULT_FILE_PATH = "credentials.json";
+
     private String asId = null;
     private OneKey asPSK = null;
 
     private String filePath;
+
+    public FileCredentialStore()
+    {
+        this.filePath = DEFAULT_FILE_PATH;
+    }
 
     public FileCredentialStore(String filePath) throws IOException, CoseException
     {
