@@ -1,53 +1,70 @@
 package edu.cmu.sei.ttg.aaiot.network;
 
 import com.upokecenter.cbor.CBORObject;
-import com.upokecenter.cbor.CBORType;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
+ * Simple COAP client using DTLS and PSK. Sets up a proper DTLS connection to a CoapsPskServer.
  * Created by sebastianecheverria on 8/28/17.
  */
 public class CoapsPskClient
 {
     private CoapClient coapClient;
-    private String name;
+    private String serverName;
+    private int serverPort;
+    private String keyId;
     private byte[] key;
 
-    public CoapsPskClient(String name, byte[] key)
+    /**
+     * Constructor.
+     * @param serverName The IP or hostname of the server.
+     * @param serverPort The port of the server.
+     * @param keyId The id of the PSK to use.
+     * @param key The raw bytes of the 128-bit PSK.
+     */
+    public CoapsPskClient(String serverName, int serverPort, String keyId, byte[] key)
     {
-        this.name = name;
+        this.serverName = serverName;
+        this.serverPort = serverPort;
+        this.keyId = keyId;
         this.key = key;
     }
 
-    public CBORObject sendRequest(String serverName, int serverPort,
-                                               String resource, String method, CBORObject payload)
+    /**
+     * Sends a COAPS request and returns a CBOR object with the response.
+     * @param resource The name of the resource to access.
+     * @param method The method to use: "post" or "get".
+     * @param payload A CBOR object containing payload, if method is "post".
+     * @return
+     */
+    public CBORObject sendRequest(String resource, String method, CBORObject payload)
     {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + resource;
         coapClient = new CoapClient(uri);
-        coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, name, key));
+        coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
 
         System.out.println("Sending request to server: " + uri);
         CoapResponse response = null;
-        if(method.equals("post"))
+        if(method.toLowerCase().equals("post"))
         {
             response = coapClient.post(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
         }
-        else if(method.equals("get"))
+        else if(method.toLowerCase().equals("get"))
         {
             response = coapClient.get();
         }
+        else
+        {
+            throw new RuntimeException("Method '" + method + "' not supported.");
+        }
 
-        Map<String, CBORObject> map = null;
         if(response == null)
         {
-            System.out.println("Server did not respond.");
+            System.out.println("Server did not respond, timed out, or cancelled connection.");
             return null;
         }
 
@@ -68,17 +85,19 @@ public class CoapsPskClient
         try
         {
             responseData = CBORObject.DecodeFromBytes(response.getPayload());
+            System.out.println("Response CBOR Payload: " + responseData);
         }
         catch(Exception e)
         {
-            System.out.println("Reply was received in plain text.");
-            return null;
+            System.out.println("Reply was not CBOR.");
         }
 
-        System.out.println("Response CBOR Payload: " + responseData);
         return responseData;
     }
 
+    /**
+     * Stops the internal DTLS endpoint.
+     */
     public void stop()
     {
         if(coapClient != null)

@@ -13,41 +13,38 @@ import java.net.InetSocketAddress;
 import java.util.logging.Logger;
 
 /**
+ * COAP server using DTLS with PSK. Only allows profile with AES_128_CCM_8 params.
+ * Also, only holds one key_id-key pair.
  * Created by sebastianecheverria on 8/28/17.
  */
 public class CoapsPskServer extends CoapServer implements AutoCloseable
 {
-    // TODO: use timeout.
-    private static final int TIMEOUT = 10 * 1000;
-
     private static final Logger LOGGER = Logger.getLogger(CoapsPskServer.class.getName());
-
-    private String name;
-    private byte[] key;
-    private Resource handler;
-    private int port;
 
     /**
      * Constructor.
      *
      */
-    public CoapsPskServer(String name, byte[] key, Resource handler, int port)
+    public CoapsPskServer(String keyId, byte[] key, Resource resource, int port)
     {
-        this.name = name;
-        this.key = key;
-        this.handler = handler;
-        this.port = port;
-
-        addEndpoint(setupDtlsEndpoint(port, name, key));
-
-        add(this.handler);
+        addEndpoint(setupDtlsEndpoint(port, keyId, key));
+        add(resource);
     }
 
-    public static CoapEndpoint setupDtlsEndpoint(int port, String name, byte[] key)
+    /**
+     * Sets up the DTLS connection with PSK, and AES_128_CCM_8 as the algorithm.
+     * Only supports 1 keyId/key set.
+     * Static so that it can also be used by a client to set up its endpoint.
+     * @param port
+     * @param keyId
+     * @param key
+     * @return
+     */
+    public static CoapEndpoint setupDtlsEndpoint(int port, String keyId, byte[] key)
     {
         DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(port));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
-        builder.setPskStore(new StaticPskStore(name, key));
+        builder.setPskStore(new StaticPskStore(keyId, key));
 
         DTLSConnector connector = new DTLSConnector(builder.build());
         CoapEndpoint endpoint = new CoapEndpoint(connector, NetworkConfig.getStandard());
@@ -55,10 +52,13 @@ public class CoapsPskServer extends CoapServer implements AutoCloseable
         return endpoint;
     }
 
+    /**
+     * Stops all endpoints.
+     */
     @Override
     public void close()
     {
-        LOGGER.info("Closing down pairing server ...");
+        LOGGER.info("Closing down PSK server ...");
         this.stop();
     }
 }

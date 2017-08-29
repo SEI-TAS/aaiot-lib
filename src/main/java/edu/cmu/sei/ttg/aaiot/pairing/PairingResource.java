@@ -7,17 +7,19 @@ import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.server.resources.CoapExchange;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 
 /**
+ * COAP resource that handles pairing.
  * Created by sebastianecheverria on 8/28/17.
  */
 public class PairingResource extends CoapResource
 {
-    private static final int TIMEOUT = 15 * 1000;
+    private static final int TIMEOUT_IN_MS = 15 * 1000;
+    private static final int SLEEP_TIME_IN_MS = 500;
+    private static final String RESOURCE_NAME = "pair";
 
     public static final int PAIRING_PORT = 9877;
     public static final String AS_ID_KEY = "id";
@@ -25,28 +27,41 @@ public class PairingResource extends CoapResource
     public static final String DEVICE_ID_KEY = "id";
     public static final String DEVICE_INFO_KEY = "info";
 
-    private String name;
-    private byte[] key;
+    private String myId;
     private String additionalInfo;
     private ICredentialStore credentialStore;
     private CoapsPskServer coapsPskServer;
 
     private boolean isPairingFinished;
 
-    public PairingResource(String name, byte[] key, String additionalInfo, ICredentialStore credentialStore)
+    /**
+     * Constructor
+     * @param keyId The id of the PSK to be used in the DTLS connection.
+     * @param key The raw bytes of the DTLS key.
+     * @param additionalInfo Optional, additional info to be sent, or an empty string if not needed.
+     * @param credentialStore Where to store the credentials received through pairing.
+     */
+    public PairingResource(String keyId, byte[] key, String myId, String additionalInfo, ICredentialStore credentialStore)
     {
-        super("pair");
-        this.name = name;
-        this.key = key;
-        this.additionalInfo = additionalInfo;
+        super(RESOURCE_NAME);
+        coapsPskServer = new CoapsPskServer(keyId, key, this, PAIRING_PORT);
         this.credentialStore = credentialStore;
+        this.myId = myId;
+        this.additionalInfo = additionalInfo;
+        if(this.additionalInfo == null)
+        {
+            this.additionalInfo = "";
+        }
     }
 
-    public boolean startPairing() throws IOException
+    /**
+     * Starts a local server for pairing, and wait until pairing finshes or is aborted.
+     * @return True if the pairing procedure was successful, false if not.
+     */
+    public boolean pair()
     {
         System.out.println("Starting pairing server");
         isPairingFinished = false;
-        coapsPskServer = new CoapsPskServer(name, key, this, PAIRING_PORT);
         coapsPskServer.start();
 
         boolean success = true;
@@ -55,7 +70,7 @@ public class PairingResource extends CoapResource
         {
             try
             {
-                Thread.sleep(1000);
+                Thread.sleep(SLEEP_TIME_IN_MS);
             }
             catch (InterruptedException e)
             {
@@ -64,11 +79,10 @@ public class PairingResource extends CoapResource
                 break;
             }
 
-            Instant ends = Instant.now();
-            Duration ellapsed = Duration.between(starts, ends);
-            if(ellapsed.toMillis() > TIMEOUT)
+            Duration ellapsed = Duration.between(starts, Instant.now());
+            if(ellapsed.toMillis() > TIMEOUT_IN_MS)
             {
-                System.out.println("Timeout reached, stopping pairing server");
+                System.out.println("Timeout reached, aborting pairing.");
                 success = false;
                 break;
             }
@@ -80,13 +94,15 @@ public class PairingResource extends CoapResource
         return success;
     }
 
+    /**
+     * Handles the actual pairing request, storing credentials and returning the specified info.
+     * @param exchange the COAP exchange structure with the request info.
+     */
     @Override
     public void handlePOST(CoapExchange exchange)
     {
         System.out.println("Receiving pairing request");
         CBORObject request = CBORObject.DecodeFromBytes(exchange.getRequestPayload());
-
-        // Get AS ID and PSK.
         String asId = request.get(AS_ID_KEY).AsString();
         String psk = request.get(AS_PSK_KEY).AsString();
 
@@ -96,7 +112,7 @@ public class PairingResource extends CoapResource
 
         System.out.println("Sending reply");
         CBORObject reply = CBORObject.NewMap();
-        reply.Add(DEVICE_ID_KEY, name);
+        reply.Add(DEVICE_ID_KEY, myId);
         reply.Add(DEVICE_INFO_KEY, additionalInfo);
         exchange.respond(CoAP.ResponseCode.CONTENT, reply.EncodeToBytes());
 
