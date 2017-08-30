@@ -13,11 +13,11 @@ import org.eclipse.californium.core.coap.MediaTypeRegistry;
  */
 public class CoapsPskClient
 {
-    private CoapClient coapClient;
-    private String serverName;
-    private int serverPort;
-    private String keyId;
-    private byte[] key;
+    protected CoapClient coapClient;
+    protected String serverName;
+    protected int serverPort;
+    protected String keyId;
+    protected byte[] key;
 
     /**
      * Constructor.
@@ -32,6 +32,9 @@ public class CoapsPskClient
         this.serverPort = serverPort;
         this.keyId = keyId;
         this.key = key;
+
+        coapClient = new CoapClient();
+        coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
     }
 
     /**
@@ -44,8 +47,7 @@ public class CoapsPskClient
     public CBORObject sendRequest(String resource, String method, CBORObject payload)
     {
         String uri = "coaps://" + serverName + ":" + serverPort + "/" + resource;
-        coapClient = new CoapClient(uri);
-        coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
+        coapClient.setURI(uri);
 
         System.out.println("Sending request to server: " + uri);
         CoapResponse response = null;
