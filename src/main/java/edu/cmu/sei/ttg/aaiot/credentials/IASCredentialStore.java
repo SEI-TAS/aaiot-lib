@@ -7,7 +7,7 @@ import java.net.InetAddress;
 /**
  * Created by sebastianecheverria on 7/25/17.
  */
-public interface ICredentialStore
+public interface IASCredentialStore
 {
     boolean storeAS(String id, byte[] psk, InetAddress ipAddress);
     String getASid();

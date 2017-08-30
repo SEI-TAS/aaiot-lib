@@ -1,7 +1,7 @@
 package edu.cmu.sei.ttg.aaiot.pairing;
 
 import com.upokecenter.cbor.CBORObject;
-import edu.cmu.sei.ttg.aaiot.credentials.ICredentialStore;
+import edu.cmu.sei.ttg.aaiot.credentials.IASCredentialStore;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskServer;
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.coap.CoAP;
@@ -29,7 +29,7 @@ public class PairingResource extends CoapResource
 
     private String myId;
     private String additionalInfo;
-    private ICredentialStore credentialStore;
+    private IASCredentialStore credentialStore;
     private CoapsPskServer coapsPskServer;
 
     private boolean isPairingFinished;
@@ -41,7 +41,7 @@ public class PairingResource extends CoapResource
      * @param additionalInfo Optional, additional info to be sent, or an empty string if not needed.
      * @param credentialStore Where to store the credentials received through pairing.
      */
-    public PairingResource(String keyId, byte[] key, String myId, String additionalInfo, ICredentialStore credentialStore)
+    public PairingResource(String keyId, byte[] key, String myId, String additionalInfo, IASCredentialStore credentialStore)
     {
         super(RESOURCE_NAME);
         coapsPskServer = new CoapsPskServer(keyId, key, this, PAIRING_PORT);

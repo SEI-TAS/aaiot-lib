@@ -16,7 +16,7 @@ import java.util.Base64;
 /**
  * Created by sebastianecheverria on 8/11/17.
  */
-public class FileCredentialStore implements ICredentialStore
+public class FileASCredentialStore implements IASCredentialStore
 {
     private static final String ID_KEY = "AS_ID";
     private static final String PSK_KEY = "AS_PSK";
@@ -30,13 +30,13 @@ public class FileCredentialStore implements ICredentialStore
 
     private String filePath;
 
-    public FileCredentialStore() throws IOException, CoseException
+    public FileASCredentialStore() throws IOException, CoseException
     {
         this.filePath = DEFAULT_FILE_PATH;
         loadFromFile();
     }
 
-    public FileCredentialStore(String filePath) throws IOException, CoseException
+    public FileASCredentialStore(String filePath) throws IOException, CoseException
     {
         this.filePath = filePath;
         loadFromFile();
