@@ -16,7 +16,7 @@ public class ResourceServer
     public String rsId;
     public boolean isTokenSent = false;
     public CBORObject token = null;
-    public String popKeyId = null;
+    public byte[] popKeyId = null;
     public CBORObject popKey = null;
 
     public ResourceServer(String rsId, Map<String, CBORObject> data)
@@ -34,7 +34,7 @@ public class ResourceServer
         System.out.println("Cnf (pop) key data: " + popKey);
 
         CBORObject kidCbor = popKey.get(KeyKeys.KeyId.AsCBOR());
-        popKeyId = new String(kidCbor.GetByteString(), Constants.charset);
+        popKeyId = kidCbor.GetByteString();
         System.out.println("Cnf (pop) key id: " + popKeyId);
     }
 
@@ -43,7 +43,7 @@ public class ResourceServer
         rsId = data.getString("rsId");
         token = CBORObject.DecodeFromBytes(Base64.getDecoder().decode(data.getString("token")));
         popKey = CBORObject.DecodeFromBytes(Base64.getDecoder().decode(data.getString("key")));
-        popKeyId = data.getString("popKeyId");
+        popKeyId = Base64.getDecoder().decode(data.getString("popKeyId"));
         isTokenSent = data.getBoolean("isTokenSent");
     }
 
@@ -53,7 +53,7 @@ public class ResourceServer
         jsonData.put("rsId", rsId);
         jsonData.put("token", Base64.getEncoder().encodeToString(token.EncodeToBytes()));
         jsonData.put("key", Base64.getEncoder().encodeToString(popKey.EncodeToBytes()));
-        jsonData.put("popKeyId", popKeyId);
+        jsonData.put("popKeyId", Base64.getEncoder().encodeToString(popKeyId));
         jsonData.put("isTokenSent", isTokenSent);
         return jsonData;
     }
