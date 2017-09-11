@@ -5,6 +5,7 @@ import com.upokecenter.cbor.CBORObject;
 import org.json.JSONObject;
 import se.sics.ace.Constants;
 
+import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Map;
 
@@ -36,6 +37,8 @@ public class ResourceServer
         CBORObject kidCbor = popKey.get(KeyKeys.KeyId.AsCBOR());
         popKeyId = kidCbor.GetByteString();
         System.out.println("Cnf (pop) key id: " + popKeyId);
+
+        System.out.println("Token id in Bae64 (cti): " + Base64.getEncoder().encodeToString(kidCbor.GetByteString()));
     }
 
     public ResourceServer(JSONObject data)
@@ -56,5 +59,13 @@ public class ResourceServer
         jsonData.put("popKeyId", Base64.getEncoder().encodeToString(popKeyId));
         jsonData.put("isTokenSent", isTokenSent);
         return jsonData;
+    }
+
+    public long bytesToLong(byte[] bytes)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(bytes);
+        buffer.flip(); //need flip
+        return buffer.getLong();
     }
 }
