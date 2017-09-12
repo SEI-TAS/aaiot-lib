@@ -76,6 +76,7 @@ public class RevokedTokenChecker implements Runnable
                     break;
                 }
 
+                System.out.println("Checking for revoked tokens.");
                 CoapsPskClient client = new CoapsPskClient(asServerName, asServerPort, myId, myPSK);
 
                 Set<CBORObject> tokenList = new HashSet<>();
@@ -125,6 +126,7 @@ public class RevokedTokenChecker implements Runnable
                 }
 
                 client.stop();
+                System.out.println("Finished checking for revoked tokens.");
             }
             catch(Exception ex)
             {
