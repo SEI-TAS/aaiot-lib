@@ -1,6 +1,6 @@
 package edu.cmu.sei.ttg.aaiot.tokens;
 
-import COSE.CoseException;
+import com.upokecenter.cbor.CBORObject;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -95,5 +95,18 @@ public class FileTokenStorage
     public Map<String, ResourceServer> getTokens()
     {
         return tokens;
+    }
+
+    public void removeToken(CBORObject token)
+    {
+        for(String rsId : tokens.keySet())
+        {
+            ResourceServer rs = tokens.get(rsId);
+            if(rs.token.equals(token))
+            {
+                tokens.remove(rsId);
+                return;
+            }
+        }
     }
 }
