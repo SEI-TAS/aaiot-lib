@@ -6,10 +6,7 @@ import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 import se.sics.ace.rs.TokenRepository;
 
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by sebastianecheverria on 9/11/17.
@@ -79,14 +76,18 @@ public class RevokedTokenChecker implements Runnable
                 System.out.println("Checking for revoked tokens.");
                 CoapsPskClient client = new CoapsPskClient(asServerName, asServerPort, myId, myPSK);
 
-                Set<CBORObject> tokenList = new HashSet<>();
                 if(tokenStorage != null)
                 {
                     Map<String, ResourceServer> tokens = tokenStorage.getTokens();
                     for(String rsId : tokens.keySet())
                     {
                         ResourceServer rs = tokens.get(rsId);
-                        tokenList.add(rs.token);
+                        boolean checkSuccessful = checkAndPurgeToken(client, rs.token, rsId);
+                        if(!checkSuccessful)
+                        {
+                            // Connection issue, break to avoid retrying if there is no good connection.
+                            break;
+                        }
                     }
                 }
                 else if(tokenRepository != null)
@@ -94,33 +95,12 @@ public class RevokedTokenChecker implements Runnable
                     Set<String> tokenCtis = tokenRepository.getCtis();
                     for(String cti : tokenCtis)
                     {
-                        tokenList.add(CBORObject.FromObject(Base64.getDecoder().decode(cti)));
-                    }
-                }
-
-                for(CBORObject token : tokenList)
-                {
-                    boolean isActive = false;
-                    try
-                    {
-                        isActive = isTokenActive(client, token);
-                    }
-                    catch(Exception ex)
-                    {
-                        // Issue sending this request, AS may be out of reach. Stop checking for now.
-                        break;
-                    }
-
-                    if(!isActive)
-                    {
-                        System.out.println("WARNING: Revoked or expired token found, removing from local repo.");
-                        if(tokenStorage != null)
+                        CBORObject cborCti = CBORObject.FromObject(Base64.getDecoder().decode(cti));
+                        boolean checkSuccessful = checkAndPurgeToken(client, cborCti, null);
+                        if(!checkSuccessful)
                         {
-                            tokenStorage.removeToken(token);
-                        }
-                        else if(tokenRepository != null)
-                        {
-                            tokenRepository.removeToken(Base64.getEncoder().encodeToString(token.GetByteString()));
+                            // Connection issue, break to avoid retrying if there is no good connection.
+                            break;
                         }
                     }
                 }
@@ -135,12 +115,48 @@ public class RevokedTokenChecker implements Runnable
         }
     }
 
+    private boolean checkAndPurgeToken(CoapsPskClient client, CBORObject token, String rsId) throws AceException
+    {
+        boolean isActive = false;
+        try
+        {
+            isActive = isTokenActive(client, token, rsId);
+        }
+        catch(Exception ex)
+        {
+            // Issue sending this request, AS may be out of reach. Stop checking for now.
+            return false;
+        }
+
+        if(!isActive)
+        {
+            System.out.println("WARNING: Revoked or expired token found, removing from local repo.");
+            if(tokenStorage != null)
+            {
+                tokenStorage.removeToken(token);
+            }
+            else if(tokenRepository != null)
+            {
+                String cti = Base64.getEncoder().encodeToString(token.GetByteString());
+                tokenRepository.removeToken(cti);
+            }
+        }
+
+        return true;
+    }
+
     // Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
     // be from a revoked or an expired token.
-    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws AceException
+    private boolean isTokenActive(CoapsPskClient client, CBORObject token, String rsId) throws AceException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.TOKEN, token);
+
+        if(rsId != null)
+        {
+            params.Add((short) 40, CBORObject.FromObject(rsId));
+        }
+
         CBORObject reply = client.sendRequest("introspect", "post", params);
 
         Map<String, CBORObject> mapReply = Constants.unabbreviate(reply);
