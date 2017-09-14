@@ -6,6 +6,7 @@ import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.network.Endpoint;
 
 /**
  * Simple COAP client using DTLS and PSK. Sets up a proper DTLS connection to a CoapsPskServer.
@@ -13,6 +14,7 @@ import org.eclipse.californium.core.coap.MediaTypeRegistry;
  */
 public class CoapsPskClient
 {
+    protected boolean useDTLS;
     protected CoapClient coapClient;
     protected String serverName;
     protected int serverPort;
@@ -35,6 +37,7 @@ public class CoapsPskClient
 
         coapClient = new CoapClient();
         coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
+        this.useDTLS = true;
     }
 
     /**
@@ -46,7 +49,13 @@ public class CoapsPskClient
      */
     public CBORObject sendRequest(String resource, String method, CBORObject payload)
     {
-        String uri = "coaps://" + serverName + ":" + serverPort + "/" + resource;
+        String prefix = "coap";
+        if(useDTLS)
+        {
+            prefix += "s";
+        }
+
+        String uri = prefix + "://" + serverName + ":" + serverPort + "/" + resource;
         coapClient.setURI(uri);
 
         System.out.println("Sending request to server: " + uri);
@@ -104,7 +113,11 @@ public class CoapsPskClient
     {
         if(coapClient != null)
         {
-            coapClient.getEndpoint().stop();
+            Endpoint endpoint = coapClient.getEndpoint();
+            if(endpoint != null)
+            {
+                endpoint.stop();
+            }
         }
     }
 
