@@ -55,7 +55,14 @@ public class CoapsPskClient
             prefix += "s";
         }
 
-        String uri = prefix + "://" + serverName + ":" + serverPort + "/" + resource;
+        // Support IPv6 addresses properly.
+        String formattedServerName = serverName;
+        if(serverName.contains(":") && !serverName.startsWith("["))
+        {
+            formattedServerName = "[" + serverName + "]";
+        }
+
+        String uri = prefix + "://" + formattedServerName + ":" + serverPort + "/" + resource;
         coapClient.setURI(uri);
 
         System.out.println("Sending request to server: " + uri);

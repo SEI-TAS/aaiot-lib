@@ -21,6 +21,7 @@ public class PairingResource extends CoapResource
     private static final int SLEEP_TIME_IN_MS = 500;
     private static final String RESOURCE_NAME = "pair";
 
+    public static final String PAIRING_KEY_ID = "pairing";
     public static final int PAIRING_PORT = 9877;
     public static final String AS_ID_KEY = "id";
     public static final String AS_PSK_KEY = "psk";
@@ -36,15 +37,14 @@ public class PairingResource extends CoapResource
 
     /**
      * Constructor
-     * @param keyId The id of the PSK to be used in the DTLS connection.
      * @param key The raw bytes of the DTLS key.
      * @param additionalInfo Optional, additional info to be sent, or an empty string if not needed.
      * @param credentialStore Where to store the credentials received through pairing.
      */
-    public PairingResource(String keyId, byte[] key, String myId, String additionalInfo, IASCredentialStore credentialStore)
+    public PairingResource(byte[] key, String myId, String additionalInfo, IASCredentialStore credentialStore)
     {
         super(RESOURCE_NAME);
-        coapsPskServer = new CoapsPskServer(keyId, key, this, PAIRING_PORT);
+        coapsPskServer = new CoapsPskServer(PAIRING_KEY_ID, key, this, PAIRING_PORT);
         this.credentialStore = credentialStore;
         this.myId = myId;
         this.additionalInfo = additionalInfo;
