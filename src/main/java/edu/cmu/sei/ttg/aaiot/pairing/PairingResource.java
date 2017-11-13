@@ -17,7 +17,7 @@ import java.util.Base64;
  */
 public class PairingResource extends CoapResource
 {
-    private static final int TIMEOUT_IN_MS = 15 * 1000;
+    private static final int TIMEOUT_IN_MS = 25 * 1000;
     private static final int SLEEP_TIME_IN_MS = 500;
     private static final String RESOURCE_NAME = "pair";
 
