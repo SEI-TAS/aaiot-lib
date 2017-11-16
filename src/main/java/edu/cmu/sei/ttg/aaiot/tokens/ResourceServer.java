@@ -68,4 +68,14 @@ public class ResourceServer
         buffer.flip(); //need flip
         return buffer.getLong();
     }
+
+    public String getRsId()
+    {
+        return rsId;
+    }
+
+    public String getTokenAsString()
+    {
+        return token.toString();
+    }
 }
