@@ -95,7 +95,7 @@ public class CoapsPskClient
                 response.getCode() != CoAP.ResponseCode.CONTENT)
         {
             System.out.println("Error received in response: " + response.getCode());
-            return null;
+            throw new RuntimeException("Error received in response: " + response.getCode());
         }
 
         // We assume by now things went well.
