@@ -18,7 +18,7 @@ public class FileTokenStorage
 {
     private static final String DEFAULT_FILE_PATH = "tokens.json";
 
-    private Map<String, ResourceServer> tokens = new HashMap<>();
+    private Map<String, TokenInfo> tokens = new HashMap<>();
     private String filePath;
 
     public FileTokenStorage() throws IOException
@@ -60,7 +60,7 @@ public class FileTokenStorage
         for(Object server : servers)
         {
             JSONObject serverData = (JSONObject) server;
-            ResourceServer resourceServer = new ResourceServer(serverData);
+            TokenInfo resourceServer = new TokenInfo(serverData);
             tokens.put(resourceServer.rsId, resourceServer);
         }
     }
@@ -74,7 +74,7 @@ public class FileTokenStorage
             servers.put("servers", serverList);
             for(String rsId : tokens.keySet())
             {
-                ResourceServer resourceServer = tokens.get(rsId);
+                TokenInfo resourceServer = tokens.get(rsId);
                 serverList.put(resourceServer.toJSON());
             }
 
@@ -92,21 +92,44 @@ public class FileTokenStorage
         }
     }
 
-    public Map<String, ResourceServer> getTokens()
+    public Map<String, TokenInfo> getTokens()
     {
         return tokens;
     }
 
+    /**
+     * Returns a TokenInfo object based on the given token in CBOR format.
+     */
+    public TokenInfo getTokenInfo(CBORObject token)
+    {
+        for(String rsId : tokens.keySet())
+        {
+            TokenInfo tokenInfo = tokens.get(rsId);
+            if(tokenInfo.token.equals(token))
+            {
+                return tokenInfo;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Deletes a TokenInfo entry given the token in CBOR format.
+     * @param token
+     */
     public void removeToken(CBORObject token)
     {
         for(String rsId : tokens.keySet())
         {
-            ResourceServer rs = tokens.get(rsId);
+            TokenInfo rs = tokens.get(rsId);
             if(rs.token.equals(token))
             {
                 tokens.remove(rsId);
                 return;
             }
         }
+
+        throw new IllegalArgumentException("Token to remove not found: " + token.toString());
     }
 }

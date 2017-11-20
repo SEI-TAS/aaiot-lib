@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by sebastianecheverria on 8/30/17.
  */
-public class ResourceServer
+public class TokenInfo
 {
     public String rsId;
     public boolean isTokenSent = false;
@@ -21,7 +21,7 @@ public class ResourceServer
     public CBORObject popKey = null;
     private String popKeyIdAsString = "";
 
-    public ResourceServer(String rsId, Map<String, CBORObject> data)
+    public TokenInfo(String rsId, Map<String, CBORObject> data)
     {
         this.rsId = rsId;
         isTokenSent = false;
@@ -43,7 +43,7 @@ public class ResourceServer
         System.out.println("Token id in Base64 (cti): " + popKeyIdAsString);
     }
 
-    public ResourceServer(JSONObject data)
+    public TokenInfo(JSONObject data)
     {
         rsId = data.getString("rsId");
         token = CBORObject.DecodeFromBytes(Base64.getDecoder().decode(data.getString("token")));
@@ -83,7 +83,12 @@ public class ResourceServer
         return token.toString();
     }
 
-    public String getPopKeyIdAsString()
+    /**
+     * Returns the pop key ID as a token id. This matches the CTI id used in the AS, just because in the AS implementation
+     * the CTI is also used as the pop key ID.
+     * @return
+     */
+    public String getTokenId()
     {
         return popKeyIdAsString;
     }

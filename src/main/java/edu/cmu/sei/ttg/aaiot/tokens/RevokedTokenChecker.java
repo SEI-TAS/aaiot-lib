@@ -25,39 +25,57 @@ public class RevokedTokenChecker implements Runnable
 
     private TokenRepository tokenRepository;
     private FileTokenStorage tokenStorage;
+    private IRemovedTokenTracker removedTokenTracker;
 
-    public RevokedTokenChecker(String asServerName, int asServerPort, String myId, byte[] myKey, TokenRepository tokens)
+    /**
+     * Constructor when using a TokenRepository to store tokens.
+     */
+    public RevokedTokenChecker(String asServerName, int asServerPort, String myId, byte[] myKey, IRemovedTokenTracker removedTokenTracker, TokenRepository tokens)
     {
         this.asServerName = asServerName;
         this.asServerPort = asServerPort;
         this.myId = myId;
         this.myPSK = myKey;
+        this.removedTokenTracker = removedTokenTracker;
         this.tokenRepository = tokens;
         this.tokenStorage = null;
     }
 
-    public RevokedTokenChecker(String asServerName, int asServerPort, String myId, byte[] myKey, FileTokenStorage tokens)
+    /**
+     * Constructor when using a FileTokenStorage to store tokens.
+     */
+    public RevokedTokenChecker(String asServerName, int asServerPort, String myId, byte[] myKey, IRemovedTokenTracker removedTokenTracker, FileTokenStorage tokens)
     {
         this.asServerName = asServerName;
         this.asServerPort = asServerPort;
         this.myId = myId;
         this.myPSK = myKey;
+        this.removedTokenTracker = removedTokenTracker;
         this.tokenStorage = tokens;
         this.tokenRepository = null;
     }
 
+    /**
+     * Starts the checking thread.
+     */
     public void startChecking()
     {
         checkerThread = new Thread(this, "checkerThread");
         checkerThread.start();
     }
 
+    /**
+     * Stops the checking thread.
+     */
     public void stopChecking()
     {
         stopChecking = true;
         checkerThread.interrupt();
     }
 
+    /**
+     * Actual execution of the checker thread.
+     */
     public void run()
     {
         while(!stopChecking)
@@ -78,10 +96,10 @@ public class RevokedTokenChecker implements Runnable
 
                 if(tokenStorage != null)
                 {
-                    Map<String, ResourceServer> tokens = tokenStorage.getTokens();
+                    Map<String, TokenInfo> tokens = tokenStorage.getTokens();
                     for(String rsId : tokens.keySet())
                     {
-                        ResourceServer rs = tokens.get(rsId);
+                        TokenInfo rs = tokens.get(rsId);
                         boolean checkSuccessful = checkAndPurgeToken(client, rs.token, rsId);
                         if(!checkSuccessful)
                         {
@@ -115,6 +133,14 @@ public class RevokedTokenChecker implements Runnable
         }
     }
 
+    /**
+     * Checks if a given token is still marked as valid by the AS, and purges it if it is not.
+     * @param client
+     * @param token
+     * @param rsId
+     * @return
+     * @throws AceException
+     */
     private boolean checkAndPurgeToken(CoapsPskClient client, CBORObject token, String rsId) throws AceException
     {
         boolean isActive = false;
@@ -124,29 +150,39 @@ public class RevokedTokenChecker implements Runnable
         }
         catch(Exception ex)
         {
-            // Issue sending this request, AS may be out of reach. Stop checking for now.
+            // Issue sending this request, AS may be out of reach.
             return false;
         }
 
         if(!isActive)
         {
+            // If the token is marked as inactive, we want to remove it from our list.
+            String tokenId = null;
             System.out.println("WARNING: Revoked or expired token found, removing from local repo.");
             if(tokenStorage != null)
             {
+                tokenId = tokenStorage.getTokenInfo(token).getTokenId();
                 tokenStorage.removeToken(token);
+                tokenStorage.storeToFile();
             }
             else if(tokenRepository != null)
             {
                 String cti = Base64.getEncoder().encodeToString(token.GetByteString());
                 tokenRepository.removeToken(cti);
+                tokenId = cti;
             }
+
+            // We also want to notify to a listener that we have revoked a token.
+            removedTokenTracker.notifyRemovedToken(tokenId, rsId);
         }
 
         return true;
     }
 
-    // Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
-    // be from a revoked or an expired token.
+    /**
+     * Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
+     * be from a revoked or from an expired token.
+     */
     private boolean isTokenActive(CoapsPskClient client, CBORObject token, String rsId) throws AceException
     {
         CBORObject params = CBORObject.NewMap();
@@ -154,6 +190,7 @@ public class RevokedTokenChecker implements Runnable
 
         if(rsId != null)
         {
+            // TODO: formalize this to use experimental RFC to indicate who the token was issued to.
             params.Add((short) 40, CBORObject.FromObject(rsId));
         }
 
