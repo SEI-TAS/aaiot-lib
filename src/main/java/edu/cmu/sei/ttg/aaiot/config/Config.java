@@ -3,6 +3,7 @@ package edu.cmu.sei.ttg.aaiot.config;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -16,9 +17,10 @@ public class Config
 {
     public static Map<String, String> data = new HashMap<>();
 
-    public static void load(String configurationFileName) throws IOException
+    public static void load(String configFilePath) throws IOException
     {
-        InputStream fs = Config.class.getClassLoader().getResourceAsStream(configurationFileName);
+        System.out.println(System.getProperty("user.dir"));
+        InputStream fs = new FileInputStream(configFilePath);
         JSONTokener parser = new JSONTokener(fs);
         JSONObject config = new JSONObject(parser);
 
