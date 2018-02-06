@@ -44,6 +44,7 @@ public class PairingResource extends CoapResource
     public PairingResource(byte[] key, String myId, String additionalInfo, IASCredentialStore credentialStore)
     {
         super(RESOURCE_NAME);
+        LOGGER.info("Setting up Pairing Resource");
         coapsPskServer = new CoapsPskServer(PAIRING_KEY_ID, key, this, PAIRING_PORT);
         this.credentialStore = credentialStore;
         this.myId = myId;
