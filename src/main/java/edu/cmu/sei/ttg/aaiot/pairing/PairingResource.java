@@ -21,7 +21,7 @@ public class PairingResource extends CoapResource
     private static final int SLEEP_TIME_IN_MS = 500;
     private static final String RESOURCE_NAME = "pair";
 
-    public static final String PAIRING_KEY_ID = "pairing";
+    public static final String PAIRING_KEY_ID = "Authentication01";
     public static final int PAIRING_PORT = 9877;
     public static final String AS_ID_KEY = "id";
     public static final String AS_PSK_KEY = "psk";
