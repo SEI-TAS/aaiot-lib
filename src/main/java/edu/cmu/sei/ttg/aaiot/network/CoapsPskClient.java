@@ -14,7 +14,10 @@ import org.eclipse.californium.core.network.Endpoint;
  */
 public class CoapsPskClient
 {
-    protected boolean useDTLS;
+    private static String COAP_PREFIX = "coap";
+    private static String COAPS_PREFIX = "coaps";
+
+    protected String prefix;
     protected CoapClient coapClient;
     protected String serverName;
     protected int serverPort;
@@ -35,9 +38,15 @@ public class CoapsPskClient
         this.keyId = keyId;
         this.key = key;
 
-        coapClient = new CoapClient();
-        coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
-        this.useDTLS = true;
+        this.coapClient = new CoapClient();
+        this.prefix = COAP_PREFIX;
+
+        // Set up DTLS if needed.
+        if(keyId != null && key != null)
+        {
+            coapClient.setEndpoint(CoapsPskServer.setupDtlsEndpoint(0, keyId, key));
+            this.prefix = COAPS_PREFIX;
+        }
     }
 
     /**
@@ -49,12 +58,6 @@ public class CoapsPskClient
      */
     public CBORObject sendRequest(String resource, String method, CBORObject payload)
     {
-        String prefix = "coap";
-        if(useDTLS)
-        {
-            prefix += "s";
-        }
-
         // Support IPv6 addresses properly.
         String formattedServerName = serverName;
         if(serverName.contains(":") && !serverName.startsWith("["))
