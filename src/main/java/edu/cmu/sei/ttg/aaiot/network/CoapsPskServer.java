@@ -44,7 +44,7 @@ public class CoapsPskServer extends CoapServer implements AutoCloseable
     public static CoapEndpoint setupDtlsEndpoint(int port, String keyId, byte[] key)
     {
         LOGGER.info("Setting up DTLS connector builder");
-        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder(new InetSocketAddress(port));
+        DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder().setAddress(new InetSocketAddress(port));
         builder.setSupportedCipherSuites(new CipherSuite[]{CipherSuite.TLS_PSK_WITH_AES_128_CCM_8});
         builder.setPskStore(new StaticPskStore(keyId, key));
 
@@ -53,7 +53,8 @@ public class CoapsPskServer extends CoapServer implements AutoCloseable
 //        networkConfig.set(); // To set a longer timeout for 802.15.4
 
         LOGGER.info("Setting up DTLS endpoint");
-        CoapEndpoint endpoint = new CoapEndpoint(connector, networkConfig);
+        CoapEndpoint endpoint = new CoapEndpoint.CoapEndpointBuilder().setConnector(connector)
+                .setNetworkConfig(networkConfig).build();
 
         return endpoint;
     }

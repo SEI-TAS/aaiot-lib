@@ -146,7 +146,7 @@ public class RevokedTokenChecker implements Runnable
         boolean isActive = false;
         try
         {
-            isActive = isTokenActive(client, token, rsId);
+            isActive = isTokenActive(client, token);
         }
         catch(Exception ex)
         {
@@ -183,16 +183,10 @@ public class RevokedTokenChecker implements Runnable
      * Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
      * be from a revoked or from an expired token.
      */
-    private boolean isTokenActive(CoapsPskClient client, CBORObject token, String rsId) throws AceException
+    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws AceException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.TOKEN, token);
-
-        if(rsId != null)
-        {
-            // TODO: formalize this to use experimental RFC to indicate who the token was issued to.
-            params.Add((short) 40, CBORObject.FromObject(rsId));
-        }
 
         CBORObject reply = client.sendRequest("introspect", "post", params);
 
