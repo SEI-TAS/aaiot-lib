@@ -102,6 +102,10 @@ public class CoapsPskClient
         {
             response = coapClient.post(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
         }
+        else if(method.toLowerCase().equals("put"))
+        {
+            response = coapClient.put(payload.EncodeToBytes(), MediaTypeRegistry.APPLICATION_CBOR);
+        }
         else if(method.toLowerCase().equals("get"))
         {
             response = coapClient.get();
