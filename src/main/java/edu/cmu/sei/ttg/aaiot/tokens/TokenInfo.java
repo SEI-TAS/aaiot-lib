@@ -54,7 +54,13 @@ public class TokenInfo
         isTokenSent = false;
 
         token = data.get("access_token");
-        System.out.println("Token :" + token);
+        System.out.println("Token : " + token);
+
+        CBORObject tokenCbor = CBORObject.DecodeFromBytes(token.GetByteString());
+        System.out.println("Token COSE: " + tokenCbor + ", type: " + tokenCbor.getType());
+
+        CBORObject protectedHeaders = CBORObject.DecodeFromBytes(tokenCbor.get(0).GetByteString());
+        System.out.println("Token Prot Headers: " + protectedHeaders);
 
         CBORObject popKeyCbor = data.get("cnf");
         System.out.println("Cnf (pop) key: " + popKeyCbor);
