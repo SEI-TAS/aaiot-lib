@@ -140,8 +140,12 @@ public class RevokedTokenChecker implements Runnable
                     Set<String> tokenCtis = tokenRepository.getCtis();
                     for(String cti : tokenCtis)
                     {
+                        // Encode as BS as the standard requests it, even if the cti is already a BS.
                         CBORObject cborCti = CBORObject.FromObject(Base64.getDecoder().decode(cti));
-                        boolean checkSuccessful = checkAndPurgeToken(client, cborCti, null);
+                        CBORObject cborCtiAsBS = CBORObject.FromObject(cborCti.EncodeToBytes());
+                        System.out.println("CTI: " + cborCti.toString());
+                        System.out.println("CTI as BS: " + cborCti.toString());
+                        boolean checkSuccessful = checkAndPurgeToken(client, cborCtiAsBS, null);
                         if(!checkSuccessful)
                         {
                             // Connection issue, break to avoid retrying if there is no good connection.
