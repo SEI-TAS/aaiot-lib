@@ -1,4 +1,4 @@
-#AAIoT Lib
+# AAIoT Lib
 
 ## Prerequisites
 The following software needs to be installed for this project to compile and run:
