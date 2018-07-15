@@ -54,7 +54,7 @@ public class TokenInfo
         isTokenSent = false;
 
         token = data.get("access_token");
-        System.out.println("Token : " + token);
+        System.out.println("Token : " + token + ", type: " + token.getType());
 
         CBORObject tokenCbor = CBORObject.DecodeFromBytes(token.GetByteString());
         System.out.println("Token COSE: " + tokenCbor + ", type: " + tokenCbor.getType());
