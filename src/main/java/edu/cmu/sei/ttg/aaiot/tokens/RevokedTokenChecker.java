@@ -28,6 +28,7 @@ DM18-0702
 package edu.cmu.sei.ttg.aaiot.tokens;
 
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
@@ -214,7 +215,7 @@ public class RevokedTokenChecker implements Runnable
      * Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
      * be from a revoked or from an expired token.
      */
-    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws AceException
+    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws AceException, CoapException
     {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.TOKEN, token);

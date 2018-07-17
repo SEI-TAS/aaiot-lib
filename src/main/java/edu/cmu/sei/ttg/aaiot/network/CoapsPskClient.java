@@ -25,7 +25,6 @@ Copyright 2016-2018 RISE SICS AB.
 DM18-0702
 */
 
-
 package edu.cmu.sei.ttg.aaiot.network;
 
 import com.upokecenter.cbor.CBORObject;
@@ -35,6 +34,7 @@ import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.network.Endpoint;
+import se.sics.ace.Constants;
 
 import java.io.UnsupportedEncodingException;
 
@@ -86,7 +86,7 @@ public class CoapsPskClient
      * @param payload A CBOR object containing payload, if method is "post".
      * @return
      */
-    public CBORObject sendRequest(String resource, String method, CBORObject payload)
+    public CBORObject sendRequest(String resource, String method, CBORObject payload) throws CoapException
     {
         // Support IPv6 addresses properly.
         String formattedServerName = serverName;
@@ -133,8 +133,23 @@ public class CoapsPskClient
                 response.getCode() != CoAP.ResponseCode.CHANGED &&
                 response.getCode() != CoAP.ResponseCode.CONTENT)
         {
+            // Get error details and throw as exception for someone higher up to handle.
+            CBORObject errorDetails = CBORObject.DecodeFromBytes(CBORObject.FromObject(response.getPayload()).GetByteString());
             System.out.println("Error received in response: " + response.getCode());
-            throw new RuntimeException("Error received in response: " + response.getCode());
+            System.out.println("Error map: " + errorDetails.toString());
+            String errorName = "";
+            if(errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR)))
+            {
+                errorName = Constants.ERROR_CODES[errorDetails.get(CBORObject.FromObject(Constants.ERROR)).AsInt32()];
+            }
+            String errorDescription = "";
+            if(errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)))
+            {
+                errorDescription = errorDetails.get(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)).AsString();
+            }
+
+            throw new CoapException("Error received in response: " + response.getCode(), response.getCode(),
+                    errorName, errorDescription);
         }
 
         // We assume by now things went well.
