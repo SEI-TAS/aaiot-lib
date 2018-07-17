@@ -36,6 +36,8 @@ import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.network.Endpoint;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Simple COAP client using DTLS and PSK. Sets up a proper DTLS connection to a CoapsPskServer.
  * Created by sebastianecheverria on 8/28/17.
@@ -115,10 +117,12 @@ public class CoapsPskClient
             throw new RuntimeException("Method '" + method + "' not supported.");
         }
 
+        // Check if there was no reply.
         if(response == null)
         {
-            System.out.println("Server did not respond, timed out, or cancelled connection.");
-            return null;
+            String errorMsg = "Server did not respond, timed out, or cancelled connection.";
+            System.out.println(errorMsg);
+            throw new RuntimeException(errorMsg);
         }
 
         System.out.println("Response: " + Utils.prettyPrint(response));
@@ -142,7 +146,16 @@ public class CoapsPskClient
         }
         catch(Exception e)
         {
+            // If reply is not CBOR, we assume it is a UTF-8 string.
             System.out.println("Reply was not CBOR.");
+            try
+            {
+                responseData = CBORObject.FromObject(new String(response.getPayload(), "UTF-8"));
+            }
+            catch(UnsupportedEncodingException ex)
+            {
+                System.out.println("Reply was not UTF-8 string either. Giving up on how to handle it.");
+            }
         }
 
         return responseData;
