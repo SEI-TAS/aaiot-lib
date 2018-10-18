@@ -50,8 +50,8 @@ public class PairingResource extends CoapResource
 
     public static final String PAIRING_KEY_ID = "Authentication01";
     public static final int PAIRING_PORT = 9877;
-    public static final String AS_ID_KEY = "id";
-    public static final String AS_PSK_KEY = "psk";
+    public static final int AS_ID_KEY = 2;
+    public static final int AS_PSK_KEY = -1;
     public static final String DEVICE_ID_KEY = "id";
     public static final String DEVICE_INFO_KEY = "info";
 
@@ -131,12 +131,13 @@ public class PairingResource extends CoapResource
     {
         System.out.println("Receiving pairing request");
         CBORObject request = CBORObject.DecodeFromBytes(exchange.getRequestPayload());
-        String asId = request.get(AS_ID_KEY).AsString();
-        String psk = request.get(AS_PSK_KEY).AsString();
+        System.out.println("Request as CBOR: " + request.toString());
+        String asId = request.get(CBORObject.FromObject(AS_ID_KEY)).AsString();
+        byte[] psk = request.get(CBORObject.FromObject(AS_PSK_KEY)).GetByteString();
 
         // Store PSK and AS info.
         System.out.println("Storing info for AS " + asId);
-        credentialStore.storeAS(asId, Base64.getDecoder().decode(psk), exchange.getSourceAddress());
+        credentialStore.storeAS(asId, psk, exchange.getSourceAddress());
 
         System.out.println("Sending reply");
         CBORObject reply = CBORObject.NewMap();
