@@ -126,6 +126,13 @@ public class CoapsPskClient
         }
 
         System.out.println("Response: " + Utils.prettyPrint(response));
+        byte[] responsePayload = response.getPayload();
+        System.out.print("Response payload in hex: ");
+        for(byte item : responsePayload)
+        {
+            System.out.printf("%02X ", item);
+        }
+        System.out.println();
 
         if(response.getCode() != CoAP.ResponseCode.CREATED &&
                 response.getCode() != CoAP.ResponseCode.VALID &&
@@ -175,14 +182,6 @@ public class CoapsPskClient
         CBORObject responseData = null;
         try
         {
-            byte[] responsePayload = response.getPayload();
-            System.out.print("Response payload in hex: ");
-            for(byte item : responsePayload)
-            {
-                System.out.printf("%02X ", item);
-            }
-            System.out.println();
-
             responseData = CBORObject.DecodeFromBytes(responsePayload);
             System.out.println("Response Payload as CBOR: " + responseData);
         }
@@ -193,11 +192,12 @@ public class CoapsPskClient
             System.out.println("Treating response as string.");
             try
             {
-                responseData = CBORObject.FromObject(new String(response.getPayload(), "UTF-8"));
+                responseData = CBORObject.FromObject(new String(responsePayload, "UTF-8"));
             }
             catch(UnsupportedEncodingException ex)
             {
-                System.out.println("Reply was not UTF-8 string either. Giving up on how to handle it.");
+                System.out.println("Reply was not UTF-8 string either. Giving up on how to handle it. Returning as bytes");
+                responseData = CBORObject.FromObject(responsePayload);
             }
         }
 
