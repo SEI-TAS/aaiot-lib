@@ -134,35 +134,63 @@ public class CoapsPskClient
                 response.getCode() != CoAP.ResponseCode.CONTENT)
         {
             // Get error details and throw as exception for someone higher up to handle.
-            CBORObject errorDetails = CBORObject.DecodeFromBytes(CBORObject.FromObject(response.getPayload()).GetByteString());
-            System.out.println("Error received in response: " + response.getCode());
-            System.out.println("Error map: " + errorDetails.toString());
-            String errorName = "";
-            if(errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR)))
+            try
             {
-                errorName = Constants.ERROR_CODES[errorDetails.get(CBORObject.FromObject(Constants.ERROR)).AsInt32()];
-            }
-            String errorDescription = "";
-            if(errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)))
-            {
-                errorDescription = errorDetails.get(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)).AsString();
-            }
+                CBORObject errorDetails = CBORObject.DecodeFromBytes(CBORObject.FromObject(response.getPayload()).GetByteString());
+                System.out.println("Error received in response: " + response.getCode());
+                System.out.println("Error map: " + errorDetails.toString());
+                String errorName = "";
+                if (errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR)))
+                {
+                    errorName = Constants.ERROR_CODES[errorDetails.get(CBORObject.FromObject(Constants.ERROR)).AsInt32()];
+                }
+                String errorDescription = "";
+                if (errorDetails.ContainsKey(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)))
+                {
+                    errorDescription = errorDetails.get(CBORObject.FromObject(Constants.ERROR_DESCRIPTION)).AsString();
+                }
 
-            throw new CoapException("Error received in response: " + response.getCode(), response.getCode(),
-                    errorName, errorDescription);
+                throw new CoapException("Error received in response: " + response.getCode(), response.getCode(),
+                        errorName, errorDescription);
+            }
+            catch(Exception e)
+            {
+                // If reply is not CBOR, we assume it is a UTF-8 string.
+                System.out.println("Error details was not CBOR: " + e.toString());
+                System.out.println("Treating error details as string.");
+                try
+                {
+                    String errorDescription = new String(response.getPayload(), "UTF-8");
+                    throw new CoapException("Error received in response: " + response.getCode(), response.getCode(),
+                            "", errorDescription);
+                }
+                catch(UnsupportedEncodingException ex)
+                {
+                    System.out.println("Error details was not UTF-8 string either. Giving up on how to handle it.");
+                }
+            }
         }
 
         // We assume by now things went well.
         CBORObject responseData = null;
         try
         {
-            responseData = CBORObject.DecodeFromBytes(response.getPayload());
-            System.out.println("Response CBOR Payload: " + responseData);
+            byte[] responsePayload = response.getPayload();
+            System.out.print("Response payload in hex: ");
+            for(byte item : responsePayload)
+            {
+                System.out.printf("%02X ", item);
+            }
+            System.out.println();
+
+            responseData = CBORObject.DecodeFromBytes(responsePayload);
+            System.out.println("Response Payload as CBOR: " + responseData);
         }
         catch(Exception e)
         {
             // If reply is not CBOR, we assume it is a UTF-8 string.
-            System.out.println("Reply was not CBOR.");
+            System.out.println("Reply was not CBOR: " + e.toString());
+            System.out.println("Treating response as string.");
             try
             {
                 responseData = CBORObject.FromObject(new String(response.getPayload(), "UTF-8"));
