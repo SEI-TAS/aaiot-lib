@@ -160,6 +160,10 @@ public class CoapsPskClient
                 throw new CoapException("Error received in response: " + response.getCode(), response.getCode(),
                         errorName, errorDescription);
             }
+            catch(CoapException e)
+            {
+                throw e;
+            }
             catch(Exception e)
             {
                 // If reply is not CBOR, we assume it is a UTF-8 string.

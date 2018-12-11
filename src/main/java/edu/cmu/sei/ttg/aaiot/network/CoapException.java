@@ -60,4 +60,10 @@ public class CoapException extends Exception
     {
         return errorDescription;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Message: " + this.getMessage() + "; code: " + errorCode + "; name: " + errorName + "; description: " + errorDescription;
+    }
 }
