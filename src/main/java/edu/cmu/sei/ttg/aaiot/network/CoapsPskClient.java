@@ -127,6 +127,11 @@ public class CoapsPskClient
 
         System.out.println("Response: " + Utils.prettyPrint(response));
         byte[] responsePayload = response.getPayload();
+        if(responsePayload == null || responsePayload.length == 0)
+        {
+            throw new RuntimeException("Response payload was empty, server did not process request?");
+        }
+
         System.out.print("Response payload in hex: ");
         for(byte item : responsePayload)
         {
@@ -135,10 +140,10 @@ public class CoapsPskClient
         System.out.println();
 
         if(response.getCode() != CoAP.ResponseCode.CREATED &&
-                response.getCode() != CoAP.ResponseCode.VALID &&
-                response.getCode() != CoAP.ResponseCode.DELETED &&
-                response.getCode() != CoAP.ResponseCode.CHANGED &&
-                response.getCode() != CoAP.ResponseCode.CONTENT)
+           response.getCode() != CoAP.ResponseCode.VALID &&
+           response.getCode() != CoAP.ResponseCode.DELETED &&
+           response.getCode() != CoAP.ResponseCode.CHANGED &&
+           response.getCode() != CoAP.ResponseCode.CONTENT)
         {
             // Get error details and throw as exception for someone higher up to handle.
             try
