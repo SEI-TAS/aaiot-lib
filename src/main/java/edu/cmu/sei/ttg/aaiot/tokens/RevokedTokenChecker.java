@@ -221,8 +221,6 @@ public class RevokedTokenChecker implements Runnable
         params.Add(Constants.TOKEN, token);
 
         CBORObject reply = client.sendRequest("introspect", "post", params);
-
-        Map<String, CBORObject> mapReply = Constants.unabbreviate(reply);
-        return mapReply.get("active").AsBoolean();
+        return reply.get(CBORObject.FromObject(Constants.ACTIVE)).AsBoolean();
     }
 }

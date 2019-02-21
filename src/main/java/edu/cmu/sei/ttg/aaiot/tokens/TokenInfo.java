@@ -29,6 +29,7 @@ package edu.cmu.sei.ttg.aaiot.tokens;
 
 import COSE.KeyKeys;
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.Utils;
 import org.json.JSONObject;
 import se.sics.ace.Constants;
 
@@ -48,12 +49,12 @@ public class TokenInfo
     public CBORObject popKey = null;
     private String popKeyIdAsString = "";
 
-    public TokenInfo(String rsId, Map<String, CBORObject> data)
+    public TokenInfo(String rsId, CBORObject data)
     {
         this.rsId = rsId;
         isTokenSent = false;
 
-        token = data.get("access_token");
+        token = data.get(CBORObject.FromObject(Constants.ACCESS_TOKEN));
         System.out.println("Token : " + token + ", type: " + token.getType());
 
         CBORObject tokenCbor = CBORObject.DecodeFromBytes(token.GetByteString());
@@ -62,7 +63,7 @@ public class TokenInfo
         CBORObject protectedHeaders = CBORObject.DecodeFromBytes(tokenCbor.get(0).GetByteString());
         System.out.println("Token Prot Headers: " + protectedHeaders);
 
-        CBORObject popKeyCbor = data.get("cnf");
+        CBORObject popKeyCbor = data.get(CBORObject.FromObject(Constants.CNF));
         System.out.println("Cnf (pop) key: " + popKeyCbor);
 
         popKey = popKeyCbor.get(Constants.COSE_KEY_CBOR);
@@ -70,7 +71,8 @@ public class TokenInfo
 
         CBORObject kidCbor = popKey.get(KeyKeys.KeyId.AsCBOR());
         popKeyId = kidCbor.GetByteString();
-        System.out.println("Cnf (pop) key id: " + popKeyId);
+        System.out.print("Cnf (pop) key id: " );
+        Utils.printBytesAsHex(popKeyId);
 
         popKeyIdAsString = Base64.getEncoder().encodeToString(kidCbor.GetByteString());
         System.out.println("Token id in Base64 (cti): " + popKeyIdAsString);
