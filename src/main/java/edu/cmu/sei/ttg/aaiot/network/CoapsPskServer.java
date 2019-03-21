@@ -80,7 +80,7 @@ public class CoapsPskServer extends CoapServer implements AutoCloseable
 //        networkConfig.set(); // To set a longer timeout for 802.15.4
 
         LOGGER.info("Setting up DTLS endpoint");
-        CoapEndpoint endpoint = new CoapEndpoint.CoapEndpointBuilder().setConnector(connector)
+        CoapEndpoint endpoint = new CoapEndpoint.Builder().setConnector(connector)
                 .setNetworkConfig(networkConfig).build();
 
         return endpoint;
