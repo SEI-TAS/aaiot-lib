@@ -33,10 +33,13 @@ import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.Endpoint;
+import org.eclipse.californium.scandium.DTLSConnector;
 import se.sics.ace.Constants;
 
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 
 /**
  * Simple COAP client using DTLS and PSK. Sets up a proper DTLS connection to a CoapsPskServer.
@@ -226,6 +229,13 @@ public class CoapsPskClient
                 endpoint.stop();
             }
         }
+    }
+
+    /**
+     * Closes the current connection, if any.
+     */
+    public void closeConnection() {
+        ((DTLSConnector) ((CoapEndpoint) coapClient.getEndpoint()).getConnector()).close(new InetSocketAddress(serverName, serverPort));
     }
 
 }
