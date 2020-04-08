@@ -33,10 +33,15 @@ import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.Endpoint;
+import org.eclipse.californium.elements.exception.ConnectorException;
+import org.eclipse.californium.scandium.DTLSConnector;
 import se.sics.ace.Constants;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 
 /**
  * Simple COAP client using DTLS and PSK. Sets up a proper DTLS connection to a CoapsPskServer.
@@ -86,8 +91,7 @@ public class CoapsPskClient
      * @param payload A CBOR object containing payload, if method is "post".
      * @return
      */
-    public CBORObject sendRequest(String resource, String method, CBORObject payload) throws CoapException
-    {
+    public CBORObject sendRequest(String resource, String method, CBORObject payload) throws CoapException, ConnectorException, IOException {
         // Support IPv6 addresses properly.
         String formattedServerName = serverName;
         if(serverName.contains(":") && !serverName.startsWith("["))
@@ -211,6 +215,13 @@ public class CoapsPskClient
         }
 
         return responseData;
+    }
+
+    /**
+     * Closes the current connection, if any.
+     */
+    public void closeConnection() {
+        ((DTLSConnector) ((CoapEndpoint) coapClient.getEndpoint()).getConnector()).close(new InetSocketAddress(serverName, serverPort));
     }
 
     /**

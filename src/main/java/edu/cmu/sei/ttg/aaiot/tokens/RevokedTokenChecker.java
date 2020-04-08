@@ -30,10 +30,12 @@ package edu.cmu.sei.ttg.aaiot.tokens;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
+import org.eclipse.californium.elements.exception.ConnectorException;
 import se.sics.ace.AceException;
 import se.sics.ace.Constants;
 import se.sics.ace.rs.TokenRepository;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -183,6 +185,7 @@ public class RevokedTokenChecker implements Runnable
         catch(Exception ex)
         {
             // Issue sending this request, AS may be out of reach.
+            System.out.println("Could not check token: " + ex.toString());
             return false;
         }
 
@@ -215,8 +218,7 @@ public class RevokedTokenChecker implements Runnable
      * Sends an introspection request only to check if the token is still marked as valid or not. If invalid, this could
      * be from a revoked or from an expired token.
      */
-    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws AceException, CoapException
-    {
+    private boolean isTokenActive(CoapsPskClient client, CBORObject token) throws CoapException, ConnectorException, IOException {
         CBORObject params = CBORObject.NewMap();
         params.Add(Constants.TOKEN, token);
 
