@@ -5,7 +5,7 @@ The following software needs to be installed for this project to compile and run
 * Java JDK 8+
 * Gradle
 
-This project also depends on the ace-java (https://bitbucket.org/marco-tiloca-sics/ace-java) library. You should download, compile, and deploy it to a local Maven repo, so that this project will it them when resolving its dependencies.
+This project also depends on the ace-java (https://bitbucket.org/sebastian_echeverria/ace-java-postgres) library. You should download, compile, and deploy it to a local Maven repo, so that this project will it them when resolving its dependencies.
 
 To do this:
 1. Clone that repo to your PC.
@@ -23,4 +23,3 @@ To install to local Maven repo:
 To include in your dependencies in a Gradle project, add this to the dependencies section of build.gradle of your project:
 
 `compile group: 'edu.cmu.sei.ttg', name: 'aaiot-lib', version: '0.0.1-SNAPSHOT'`
-
